@@ -1,0 +1,126 @@
+/* Cowabunga! No underlines for links, bro! */
+.a,
+a {
+  text-decoration: none;
+}
+
+html,
+body {
+  transition: "all 0.1s ease-in-out",
+}
+
+/* When you hover, keep it clean and rad, dude! */
+.a:hover,
+a:hover {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* All buttons need to darken on hover using css brightness */
+button:hover {
+  filter: brightness(98%);
+}
+
+/* All buttons need to darken on hover using css brightness */
+buttons:hover {
+  filter: brightness(98%);
+}
+
+/* Hide this mysterious CSS box, bro! */
+.css-i1ihic-Box {
+  display: none;
+}
+
+.slick-slide {
+  transition: transform 0.3s ease; /* Smooth transition for the transform property */
+  display: inline-block; /* Ensure the element can be transformed */
+}
+
+.slick-slide:hover {
+  transform: scale(1.03); /* Enlarge the element by 5% on hover */
+}
+
+/* Surfing the slick slider, next stop: right! */
+.slick-next {
+  right: 10px !important;
+}
+
+/* Surfing the slick slider, previous stop: left! */
+.slick-prev {
+  left: 10px !important;
+}
+
+/* Z-index keeps the slider above the waves, bro! */
+.slick-next,
+.slick-prev {
+  z-index: 9;
+}
+
+/* Let's ride the cursor on buttons, links, and select boxes, dude! */
+select,
+button,
+a {
+  cursor: pointer !important;
+}
+
+/* Input fields with no borders or shadows, just pure freedom, bro! */
+input {
+  border: none;
+  background-image: none;
+  background-color: transparent;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+}
+
+/* Hero image ready to shred with no border-radius, dude! */
+#hero-image {
+  border-radius: 0px;
+}
+
+/* Give images a touch of style with a groovy border-radius, bro! */
+img {
+  border-radius: 6px;
+}
+
+/* hide elements on smaller screens */
+@media (max-width: 1200px) {
+  .noMobile,
+  #noMobile {
+    display: none !important;
+  }
+}
+
+
+
+.slam-down {
+  animation: slamDown 0.5s ease forwards 1s;
+}
+
+.slide-in-left-delayed {
+  animation: slideInFromLeft 2s ease 1.5s forwards;
+}
+
+.slide-in-bottom {
+  animation: slideInFromBottom 1s ease 2s forwards;
+}
+
+.slide-in-left {
+  animation: slideInFromLeft 2s ease forwards; /* Increased duration for visibility */
+}
+
+@keyframes slideInFromLeft {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slamDown {
+  0% { transform: translateY(-100%); opacity: 0; }
+  80% { transform: translateY(10%); opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slideInFromBottom {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}

@@ -1,0 +1,13 @@
+name: Rebuild DEALER_SITE_DEMO Function
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Netlify Function
+        run: |
+          curl -X POST 'https://websites.dealerclick.com/.netlify/functions/rebuildSite'

@@ -1,0 +1,55 @@
+name: Update Dealership Site
+
+on:
+  repository_dispatch:
+    types:
+      - update
+
+jobs:
+  update:
+    name: Update Gatsby Dealership Site
+    runs-on: ubuntu-latest
+    environment: Default
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          repository: dealerclick/${{ github.event.client_payload.repo_name }}
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "20"
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'github-action@users.noreply.github.com'
+
+      - name: Decode Client Payload Data
+        run: |
+          echo "Decoding Client Payload Data..."
+          echo -n "${{ github.event.client_payload.data }}" > payload_encoded.txt
+          DECODED_DATA=$(python -c "import sys, urllib.parse as ul; print(ul.unquote_plus(open('payload_encoded.txt').read()))")
+          echo "Decoded Data: $DECODED_DATA"
+          echo "DATA=$DECODED_DATA" >> $GITHUB_ENV
+
+      - name: Modify Repository
+        run: |
+          node .github/scripts/editWebsite.js "$DATA"
+
+      - name: Commit Changes
+        run: |
+          git add .
+          git commit -m "Updated dealership details"
+
+      - name: Push Changes
+        run: |
+          git push

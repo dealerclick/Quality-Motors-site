@@ -1,0 +1,113 @@
+name: Deploy Dealership Site
+
+on:
+  repository_dispatch:
+    types:
+      - deploy
+
+jobs:
+  deploy:
+    name: Deploy Gatsby Dealership Site
+    runs-on: ubuntu-latest
+    environment: Default
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dealerclick'  
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'github-action@users.noreply.github.com'
+
+      - name: Decode Client Payload Data
+        run: |
+          echo "Decoding Client Payload Data..."
+          echo -n "${{ github.event.client_payload.data }}" > payload_encoded.txt
+          DECODED_DATA=$(python -c "import sys, urllib.parse as ul; print(ul.unquote_plus(open('payload_encoded.txt').read()))")
+          echo "Decoded Data: $DECODED_DATA"
+          echo "DATA=$DECODED_DATA" >> $GITHUB_ENV
+
+      - name: Generate Repo Name
+        run: |
+          echo "Generating Repo Name..."
+          DEALERSHIP_NAME=$(echo "$DATA" | jq -r '.dealershipName')
+          REPO_NAME=$(echo "$DEALERSHIP_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/ /-/g')-site
+          echo "Generated Repo Name: $REPO_NAME"
+          echo "REPO_NAME=$REPO_NAME" >> $GITHUB_ENV
+   
+      - name: Create New Dealership Repository
+        run: |
+          curl \
+            -X POST \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/orgs/dealerclick/repos \
+            -d @- << EOF
+            {
+              "name": "${{ env.REPO_NAME }}",
+              "description": "Gatsby dealership website for $DEALERSHIP_NAME",
+              "private": true,
+              "visibility": "private"
+            }
+            EOF
+
+      - name: Clone Template to Temporary Directory
+        run: |
+          git clone https://${{ secrets.GH_TOKEN }}@github.com/dealerclick/gatsby-template-site.git temp-dir
+
+      - name: Modify Template in Temporary Directory
+        run: |
+          cd temp-dir
+          node .github/scripts/makeChanges.js "$DATA"
+
+      - name: Initialize Fresh Git History
+        run: |
+          cd temp-dir
+          rm -rf .git  # Remove the existing Git history
+          git init  # Initialize a new Git repository
+          git add .  # Add all files to the new repository
+          git commit -m "Initialized repository with modified template"
+          git branch -M main  # Rename the current branch to 'main'
+
+      - name: Push Modified Template from Temporary Directory to New Repository
+        run: |
+          cd temp-dir
+          git remote add origin https://${{ secrets.GH_TOKEN }}@github.com/dealerclick/${{ env.REPO_NAME }}.git
+          git push -f -u origin main
+
+      - name: Add Repository to Team with Maintain Permission
+        run: |
+          curl \
+          -X PUT \
+          -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          https://api.github.com/teams/8243832/repos/dealerclick/${{ steps.repo_name.outputs.repo_name }} \
+          -d '{
+          "permission": "maintain"
+          }'
+
+      - name: Notify Web Service
+        run: |
+          RESPONSE=$(curl -s -X POST \
+          -H "Content-Type: application/json" \
+          "https://dc-web-gen-service-ruxlrinqjq-uw.a.run.app/create-netlify-instance" \
+          -d "$(echo "$DATA" | jq -c '. | {repoUrl: "https://github.com/dealerclick/'"${REPO_NAME}"'.git", dealerId: .dealerId, locationId: .locationId }')")
+          echo "Web service response: $RESPONSE"
+        env:
+          DATA: ${{ env.DATA }}
+          REPO_NAME: ${{ env.REPO_NAME }}

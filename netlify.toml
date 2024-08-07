@@ -1,0 +1,3 @@
+[build]
+  functions = "./node_modules/@dealerclick/serverless-web/functions"
+
